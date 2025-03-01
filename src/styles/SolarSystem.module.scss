@@ -1,0 +1,75 @@
+.canvas {
+  margin: 0 auto;
+  //pointer-events: none;
+
+  &Wrapper {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    //&::before {
+    //  content: "";
+    //  background-color: #fff;
+    //  width: 5px;
+    //  height: 5px;
+    //  position: absolute;
+    //  top: 50%;
+    //  left: 50%;
+    //  translate: -50% -50%;
+    //}
+  }
+}
+
+.bottomPanel {
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  bottom: 0;
+  left: 0;
+  width: 100vw;
+  height: 100px;
+  background-color: #101010;
+}
+
+.rightPanel {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+
+  .slider {
+    rotate: -90deg;
+  }
+}
+
+.slider {
+}
+
+.button {
+  width: 60px;
+  height: 60px;
+  background-size: cover !important;
+  border: none;
+  cursor: pointer;
+
+  &Inactive {
+    filter: grayscale(1) brightness(1.4);
+    pointer-events: none;
+  }
+}
+
+.playButton {
+  background: url("../assets/svg/play.svg");
+  &Paused {
+    background: url("../assets/svg/pause.svg");
+  }
+}
+
+.stopButton {
+  background: url("../assets/svg/stop.svg");
+  margin-left: 20px;
+  scale: 0.9;
+}
+
+.mainButtonsWrapper {
+}
