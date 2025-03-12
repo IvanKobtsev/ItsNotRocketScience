@@ -1,0 +1,14 @@
+.InitialParameter {
+  font-family: "Discovery", sans-serif;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+
+  .parameterHeader {
+    font-size: 20px;
+  }
+
+  &:nth-child(2) {
+    margin-top: 0 !important;
+  }
+}

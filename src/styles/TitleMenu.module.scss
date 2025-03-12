@@ -1,0 +1,137 @@
+@keyframes Rotate {
+  0% {
+    rotate: 0deg;
+  }
+  100% {
+    rotate: 360deg;
+  }
+}
+
+@keyframes Blinking {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.TitleMenu {
+  font-family: "Discovery", sans-serif;
+  position: fixed;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+  transition: 1s all;
+
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:before {
+    content: "";
+    position: absolute;
+    width: 120vw;
+    height: 120vw;
+    background-color: #000;
+    background-image: url("../assets/images/cosmos.jpg");
+    background-size: cover;
+    animation: Rotate 200s linear infinite;
+    filter: brightness(0.6);
+  }
+
+  .title {
+    position: relative;
+    scale: 1.4;
+    translate: 0 -80px;
+    user-select: none;
+
+    .its {
+      position: absolute;
+      top: 0;
+      left: 0;
+      font-size: 48px;
+      translate: 50px -70px;
+      rotate: -25deg;
+      filter: drop-shadow(0 0 5px #fff);
+    }
+
+    .not {
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 48px;
+      letter-spacing: 2px;
+      translate: 180px -70px;
+      rotate: 28deg;
+      filter: drop-shadow(0 0 5px #fff);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 50px;
+        height: 50px;
+        translate: 33px 11px;
+        background: url("../assets/images/moon.png") center center no-repeat;
+        background-size: cover;
+        z-index: 100;
+        animation: Rotate 20s linear infinite;
+      }
+    }
+
+    .rocketScience {
+      font-size: 96px;
+      letter-spacing: 15px;
+      filter: drop-shadow(0 0 5px #fff);
+
+      &::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 120px;
+        height: 120px;
+        translate: 100px 0;
+        background: url("../assets/images/earth.png") center center no-repeat;
+        background-size: cover;
+        animation: Rotate 200s linear infinite alternate-reverse;
+      }
+    }
+  }
+
+  .play {
+    user-select: none;
+    text-shadow: 0 0 10px #fff;
+    position: fixed;
+    left: 50%;
+    translate: -50% 0;
+    bottom: 200px;
+    font-size: 60px;
+    z-index: 100;
+    cursor: pointer;
+    transition: 0.25s all;
+
+    &.pressedPlay {
+      animation: Blinking 0.2s linear infinite;
+      scale: 1.2;
+    }
+
+    &:hover {
+      scale: 1.2;
+      text-shadow: 0 0 15px #fff;
+    }
+
+    &:active {
+      scale: 1;
+    }
+  }
+}

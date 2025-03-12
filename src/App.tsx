@@ -1,13 +1,11 @@
 import SolarSystem from "./components/SolarSystem.tsx";
 
 function App() {
-
-
   return (
     <>
-        <SolarSystem/>
+      <SolarSystem />
     </>
-  )
+  );
 }
 
-export default App
+export default App;
