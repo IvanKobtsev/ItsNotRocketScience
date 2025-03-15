@@ -150,6 +150,11 @@
   box-sizing: border-box;
   border-radius: 15px 0 0 15px;
   box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+  transition: 0.5s all;
+
+  &.hidden {
+    translate: 120% 0;
+  }
 
   .slider {
     rotate: -90deg;
@@ -292,7 +297,14 @@
     background-size: 50px;
   }
 
+  .cameraLockIcon {
+    position: relative;
+    scale: 1.4;
+    translate: 0 -2px;
+  }
+
   .cameraLockButton {
+    position: relative;
     width: 70px;
     height: 70px;
     background-color: transparent;
@@ -306,11 +318,34 @@
     cursor: pointer;
 
     &:hover {
-      background-size: 85%;
+      background-size: 90%;
     }
 
     &:active {
       background-size: 80%;
+    }
+
+    &::after,
+    &::before {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      border-radius: 50%;
+      opacity: 0;
+      transition: 0.2s all;
+    }
+
+    &::after {
+      background-color: #78dff6aa;
+    }
+
+    &::before {
+      background-color: #78f78baa;
     }
   }
 
@@ -331,8 +366,15 @@
   }
 
   .lockSelected {
-    background-color: #6c6c6c;
-    //pointer-events: none;
+    &::after {
+      opacity: 1;
+    }
+  }
+
+  .targetSelected {
+    &::before {
+      opacity: 1;
+    }
   }
 }
 
@@ -386,7 +428,7 @@
 .leftPanel {
   position: fixed;
   left: 0;
-  top: 40%;
+  top: 50%;
   translate: 0 -50%;
   width: 300px;
   height: fit-content;
@@ -413,7 +455,7 @@
 .presetsContainer {
   font-family: "Discovery", sans-serif;
   position: fixed;
-  left: 50%;
+  left: 35%;
   top: 0;
   width: fit-content;
   height: fit-content;
@@ -432,14 +474,21 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     font-size: 22px;
     background-color: var(--panel-background-color);
     border-radius: 0 0 15px 15px;
     width: 350px;
-    height: 40px;
+    height: 80px;
     z-index: 10;
     box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
-    padding-bottom: 5px;
+    padding-top: 10px;
+    box-sizing: border-box;
+  }
+
+  .presetName {
+    font-size: 28px;
+    translate: 0 -10px;
   }
 
   .presetsWrapper {
@@ -558,6 +607,61 @@
       translate: 0 -50%;
       filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5));
     }
+  }
+}
+
+.distanceIndicator {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #141414;
+  font-family: "Discovery", sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 10px 20px;
+  border-radius: 0 0 15px 15px;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+  transition: 0.5s all;
+
+  .title {
+    font-size: 24px;
+    margin-right: 10px;
+  }
+
+  .target {
+    font-size: 30px;
+  }
+
+  &.hidden {
+    translate: 0 -200%;
+  }
+
+  &.uncentered {
+    left: 65%;
+  }
+
+  .value {
+    font-family: monospace, "Discovery";
+    font-feature-settings: "tnum";
+    font-kerning: none;
+    font-size: 28px;
+    position: absolute;
+    bottom: -45px;
+    height: 45px;
+    background-color: var(--panel-background-color);
+    display: flex;
+    justify-content: flex-end;
+    letter-spacing: 4px;
+    align-items: center;
+    box-sizing: border-box;
+    padding: 5px 10px;
+    border-radius: 0 0 10px 10px;
+    box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.5);
+    min-width: 300px;
+    text-align: right;
   }
 }
 

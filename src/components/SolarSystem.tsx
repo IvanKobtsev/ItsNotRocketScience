@@ -23,6 +23,7 @@ import moon from "../assets/images/moon.png";
 import startMusic from "../assets/audio/music/MetroidBrinstarOrchestral.opus";
 import thrusterSFX from "../assets/audio/sfx/Thruster.opus";
 import clickSFX from "../assets/audio/sfx/click.opus";
+import cameraLockSFX from "../assets/audio/sfx/cameraLock.opus";
 import pressStartSFX from "../assets/audio/sfx/pressStart.opus";
 import restartSimSFX from "../assets/audio/sfx/restartSimulation.opus";
 import soundOffSFX from "../assets/audio/sfx/soundOff.opus";
@@ -76,6 +77,24 @@ export function playSound(src: string, volume: number = 1) {
     .catch(console.error);
 }
 
+const addLeadingZeros = (number: number): string => {
+  let numberString = number.toString();
+
+  if (numberString.includes(".")) {
+    if (numberString.indexOf(".") === numberString.length - 2)
+      numberString = number.toString() + "0";
+    else numberString = number.toString();
+  } else {
+    numberString = number.toString() + ".00";
+  }
+
+  while (numberString.length < 12) {
+    numberString = "0" + numberString;
+  }
+
+  return numberString;
+};
+
 const G = 6.674e-11; // Gravitational constant
 const AU = 1.496e11; // 1 AU in meters
 const SCALE = 200 / AU; // Scale for visualization
@@ -83,6 +102,14 @@ const realTime = 0.0166666667;
 const zoomMin = -1000,
   zoomMax = 27800;
 const maxThrusterVolume = 0.3;
+
+const presetNames = [
+  "Не выбран",
+  `"Вокруг Земли"`,
+  `"Прямо в луну"`,
+  `"Вон из системы"`,
+  `"Неподрассчитали"`,
+];
 
 const toDegrees = (degree: number) => (degree * 180) / Math.PI;
 
@@ -183,6 +210,7 @@ interface ScreenState {
   isDragging: boolean;
   mousePosition: Vector;
   lockedOn: string | null;
+  target: string | null;
   backgroundRotation: number;
 }
 
@@ -206,6 +234,7 @@ const fadeOut = (audio: HTMLAudioElement) => {
 
 const SolarSystem: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const distanceIndicator = useRef(0);
   const dt = useRef(0.0166666667);
   const dtCoefficient = useRef(1);
 
@@ -353,7 +382,8 @@ const SolarSystem: React.FC = () => {
     scalePower: zoomMax,
     isDragging: false,
     mousePosition: { x: 0, y: 0 },
-    lockedOn: "Rocket",
+    lockedOn: "Ракета",
+    target: "Луна",
     backgroundRotation: 0,
   });
 
@@ -368,7 +398,7 @@ const SolarSystem: React.FC = () => {
     pressedPlay: false,
     bodiesAtStart: [
       {
-        name: "Rocket",
+        name: "Ракета",
         mass: 2822000,
         color: "white",
         radius: 10,
@@ -382,7 +412,7 @@ const SolarSystem: React.FC = () => {
         border: 5,
       },
       {
-        name: "Earth",
+        name: "Земля",
         mass: 5.973e24,
         color: "#22222d",
         image: EImage.Earth,
@@ -406,7 +436,7 @@ const SolarSystem: React.FC = () => {
         border: 0,
       },
       {
-        name: "Sun",
+        name: "Солнце",
         mass: 1.989e30,
         color: "yellow",
         image: EImage.Sun,
@@ -440,7 +470,7 @@ const SolarSystem: React.FC = () => {
         border: 10,
       },
       {
-        name: "Moon",
+        name: "Луна",
         mass: 7.342e22,
         color: "gray",
         image: EImage.Moon,
@@ -565,12 +595,14 @@ const SolarSystem: React.FC = () => {
   const gameEnd = (crash: boolean = true) => {
     systemState.current.paused = true;
     systemState.current.gameOver = true;
+    rocketData.current.speed = 0;
+    rocketData.current.windApplies = true;
 
     if (!crash) {
       systemState.current.gameClear = true;
       if (videoRef.current !== null) {
         videoRef.current!.src = moonLanding;
-        videoRef.current.currentTime = 85;
+        videoRef.current.currentTime = 0;
         videoRef.current.volume = 0.2;
       }
     } else {
@@ -606,7 +638,11 @@ const SolarSystem: React.FC = () => {
   const restart = () => {
     systemState.current.canRestart = false;
     systemState.current.gameOver = false;
-    systemState.current.gameClear = false;
+
+    setTimeout(() => {
+      systemState.current.gameClear = false;
+    }, 1000);
+
     systemState.current.paused = false;
     systemState.current.started = false;
     videoRef.current?.pause();
@@ -623,7 +659,7 @@ const SolarSystem: React.FC = () => {
       (1 -
         (clamp(distance - 100, 8000, 20900) -
           8000 +
-          Number(screenState.current.lockedOn === "Moon") * 20900) /
+          Number(screenState.current.lockedOn === "Луна") * 20900) /
           12900) *
         2 -
       1
@@ -865,11 +901,38 @@ const SolarSystem: React.FC = () => {
           systemState.current.bodies[6].position.y,
         ) - systemState.current.bodies[6].radius;
 
-      console.log(distanceBetweenRocketAndMoon);
+      switch (screenState.current.target) {
+        default:
+        case "Ракета":
+          distanceIndicator.current = 0;
+          break;
+        case "Земля":
+          distanceIndicator.current = distanceBetweenRocketAndEarth / 1000;
+          break;
+        case "Луна":
+          distanceIndicator.current = distanceBetweenRocketAndMoon / 1000;
+          break;
+        case "Солнце":
+          distanceIndicator.current =
+            (distance(
+              systemState.current.bodies[0].position.x,
+              systemState.current.bodies[0].position.y,
+              systemState.current.bodies[3].position.x,
+              systemState.current.bodies[3].position.y,
+            ) -
+              systemState.current.bodies[3].radius) /
+            1000;
+          break;
+      }
 
-      if (distanceBetweenRocketAndMoon < 1000) {
+      if (
+        (distanceBetweenRocketAndMoon < 1000 && dt.current < 1) ||
+        (distanceBetweenRocketAndMoon < 500000 && dt.current > 5)
+      ) {
         gameEnd(false);
       }
+
+      console.log(dt.current);
 
       if (distanceBetweenRocketAndEarth < 0) {
         gameEnd();
@@ -1273,6 +1336,7 @@ const SolarSystem: React.FC = () => {
 
     beforeStartTrack.play().then();
     playSound(restartSimSFX);
+    rocketData.current.speed = 0;
     rocketData.current.windApplies = true;
   };
 
@@ -1350,8 +1414,13 @@ const SolarSystem: React.FC = () => {
     screenState.current.lockedOn = objectToLockOn;
     screenState.current.offset.x = screenState.current.offset.y = 0;
     screenState.current.scalePower = scale;
-    playSound(clickSFX);
+    playSound(cameraLockSFX, 0.1);
     updateScale();
+  };
+
+  const resetTarget = (target: string) => {
+    screenState.current.target = target;
+    playSound(clickSFX);
   };
 
   const changeDt = (value: number) => {
@@ -1389,9 +1458,28 @@ const SolarSystem: React.FC = () => {
           <source src={explosionMeme} type="video/mp4" />
         </video>
         <div
+          className={`${styles.distanceIndicator} ${!systemState.current.started ? styles.uncentered : ""} ${systemState.current.starting ? styles.hidden : ""}`}
+        >
+          <div className={styles.title}>Расстояние до цели:</div>
+          <div className={styles.target}>
+            {screenState.current.target !== "Ракета"
+              ? screenState.current.target
+              : "нет"}
+          </div>
+          <div className={styles.value}>
+            {addLeadingZeros(Math.round(distanceIndicator.current * 100) / 100)}
+            {"км"}
+          </div>
+        </div>
+        <div
           className={`${styles.presetsContainer} ${systemState.current.started || systemState.current.starting ? styles.hidden : ""}`}
         >
-          <div className={styles.presetsHeader}>Пресеты</div>
+          <div className={styles.presetsHeader}>
+            <div>Пресеты</div>
+            <div className={styles.presetName}>
+              {presetNames[launchPreset.current + 1]}
+            </div>
+          </div>
           <div className={styles.presetsWrapper}>
             <div
               className={`${styles.preset} ${launchPreset.current === 0 ? styles.active : ""}`}
@@ -1550,32 +1638,50 @@ const SolarSystem: React.FC = () => {
           <div className={styles.cameraLockerWrapper}>
             <div className={styles.cameraLockIcon}></div>
             <button
-              className={`${styles.cameraLockButton} ${styles.rocketIcon} ${screenState.current.lockedOn === "Rocket" ? styles.lockSelected : null}`}
+              className={`${styles.cameraLockButton} ${styles.rocketIcon} ${screenState.current.lockedOn === "Ракета" ? styles.lockSelected : null} ${screenState.current.target === "Ракета" ? styles.targetSelected : null}`}
               onClick={() => {
-                resetCameraLock("Rocket", 27800);
+                resetCameraLock("Ракета", 27800);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                resetTarget("Ракета");
               }}
             ></button>
             <button
-              className={`${styles.cameraLockButton} ${styles.earthIcon} ${screenState.current.lockedOn === "Earth" ? styles.lockSelected : null}`}
+              className={`${styles.cameraLockButton} ${styles.earthIcon} ${screenState.current.lockedOn === "Земля" ? styles.lockSelected : null} ${screenState.current.target === "Земля" ? styles.targetSelected : null}`}
               onClick={() => {
-                resetCameraLock("Earth", 13000);
+                resetCameraLock("Земля", 13000);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                resetTarget("Земля");
               }}
             ></button>
             <button
-              className={`${styles.cameraLockButton} ${styles.moonIcon} ${screenState.current.lockedOn === "Moon" ? styles.lockSelected : null}`}
+              className={`${styles.cameraLockButton} ${styles.moonIcon} ${screenState.current.lockedOn === "Луна" ? styles.lockSelected : null} ${screenState.current.target === "Луна" ? styles.targetSelected : null}`}
               onClick={() => {
-                resetCameraLock("Moon", 24200);
+                resetCameraLock("Луна", 24200);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                resetTarget("Луна");
               }}
             ></button>
             <button
-              className={`${styles.cameraLockButton} ${styles.sunIcon} ${screenState.current.lockedOn === "Sun" ? styles.lockSelected : null}`}
+              className={`${styles.cameraLockButton} ${styles.sunIcon} ${screenState.current.lockedOn === "Солнце" ? styles.lockSelected : null} ${screenState.current.target === "Солнце" ? styles.targetSelected : null}`}
               onClick={() => {
-                resetCameraLock("Sun", 1);
+                resetCameraLock("Солнце", 1);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                resetTarget("Солнце");
               }}
             ></button>
           </div>
         </div>
-        <div className={styles.rightPanel}>
+        <div
+          className={`${styles.rightPanel} ${systemState.current.starting ? styles.hidden : null}`}
+        >
           <Slider
             styles={{
               track: {},
